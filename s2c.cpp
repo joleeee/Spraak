@@ -2,10 +2,11 @@
 #include <vector>
 #include <map>
 #include <sstream>
+#include <cassert>
 
 using namespace std;
 
-enum BTYPE {BUILTIN=0, CONSTANT=1, VARIABLE=2};
+enum BTYPE {BUILTIN=0, CONSTANT=1, VARIABLE=2, DASH=3};
 struct byte
 {
 	BTYPE type=BUILTIN;
@@ -17,10 +18,11 @@ struct byte
 	}
 };
 
-string builtin[4] = {"er", "pluss", "skriv", "ut"};
+const string builtin[9] = {"er", "pluss", "minus", "skriv", "ut", "-", "når", "mindre", "mer"};
 int main() // minimized commands (skriv instead of skriv ut), max 3 words per line, variables are max 1 word etc
 {
-	istringstream file("a er 10\nb er 20\nb pluss a\nskriv ut a\nskriv ut b\nskriv ut c\n");
+	//istringstream file("a er 10\nb er 20\nb pluss a\nskriv ut a\nskriv ut b\nskriv ut c\n");
+	istringstream file("a er 10\nb er 20\nb pluss a\nnår a mindre 20\n- a pluss 1\nskriv ut a\nskriv ut b\n");
 	string line;
 	int variable_count=1;
 	map<string, int> variable_id; // variable_id[a] == 0 because its the first variable (or maybe 1 because int is default 0, right?)
@@ -56,6 +58,7 @@ int main() // minimized commands (skriv instead of skriv ut), max 3 words per li
 			{
 				if(variable_id.find(word) == variable_id.end())
 				{
+					if(word == "plus") cerr << "->leste plus, mente du pluss?\n";
 					variable_id[word]=variable_count;
 					variable_name[variable_count]=word;
 					bytes.push_back(byte(VARIABLE,variable_count));
@@ -75,13 +78,29 @@ int main() // minimized commands (skriv instead of skriv ut), max 3 words per li
 	//cerr << "PARSED:" << endl;
 	//for(int i = 0; i < parsed.size(); i++)
 		//for(int j = 0; j < parsed[i].size(); j++)
-			//cout << parsed[i][j].type << '-' << parsed[i][j].value << (j<parsed[i].size()-1?'|':'\n');
+			//cerr << parsed[i][j].type << '-' << parsed[i][j].value << (j<parsed[i].size()-1?'|':'\n');
+	cout << "#include <iostream>\nint main(){\n";
 	map<int,bool> used_names;
+	int lastj=0;
 	for(int i = 0; i < parsed.size(); i++)
 	{
-		if(parsed[i].size() != 3)
-			cerr << "Linje " << i << " har ikke 3 ord." << endl;
-		byte a = parsed[i][0], b = parsed[i][1], c = parsed[i][2];
+
+		int j=0;
+		while(parsed[i][j].type==BUILTIN && builtin[parsed[i][j].value]=="-")
+			j++;
+
+		auto indent = [j, &lastj](){
+			if(j>lastj)
+				cout << "{\n";
+			else if(j<lastj)
+				cout << "}\n";
+			lastj=j;
+		};
+		indent();
+
+		int size = parsed[i].size()-j;
+		if(size < 3) continue;
+		byte a = parsed[i][j], b = parsed[i][j+1], c = parsed[i][j+2];
 		if(	(a.type == VARIABLE) &&
 			(b.type == BUILTIN && builtin[b.value]=="er") &&
 			(c.type == VARIABLE || c.type == CONSTANT))
@@ -94,18 +113,34 @@ int main() // minimized commands (skriv instead of skriv ut), max 3 words per li
 				used_names[a.value]=true;
 			}
 			cout << variable_name[a.value] << '=' << (c.type==CONSTANT?to_string(c.value):variable_name[c.value]) << ";\n";
+			continue;
 		}
 		else if((a.type == VARIABLE) &&
-			(b.type == BUILTIN && builtin[b.value]=="pluss") &&
-			(c.type == VARIABLE))
+			(b.type == BUILTIN && (builtin[b.value]=="pluss" || builtin[b.value]=="minus")) &&
+			(c.type == VARIABLE || c.type == CONSTANT))
 		{
-			cout << variable_name[a.value] << "+=" << variable_name[c.value] << ";\n";
+			cout << variable_name[a.value] << (builtin[b.value]=="pluss"?'+':'-')<< '=' << (c.type==VARIABLE?variable_name[c.value]:to_string(c.value)) << ";\n";
+			continue;
 		}
 		else if((a.type == BUILTIN && builtin[a.value]=="skriv")&&
 			(b.type == BUILTIN && builtin[b.value]=="ut") &&
 			(c.type == VARIABLE))
 		{
-			cout << "cout<<" << variable_name[c.value] << ";\n";
+			cout << "std::cout<<" << '\"'<<variable_name[c.value]<<" er " << "\"<<" << variable_name[c.value] << "<<std::endl;\n";
+			continue;
 		}
+		if(size < 4) continue;
+		byte d = parsed[i][j+3];
+		if(	(a.type == BUILTIN && builtin[a.value]=="når") &&
+			(b.type == VARIABLE) &&
+			(c.type == BUILTIN && (builtin[c.value] == "mindre" || builtin[c.value] == "mer")) &&
+			(d.type == CONSTANT))
+		{
+			cout << "while(" << variable_name[b.value] << (builtin[c.value]=="mindre"?"<":">") << d.value << ')' << endl;
+			continue;
+		}
+		continue;
+
 	}
+	cout << "}\n";
 }

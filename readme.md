@@ -9,7 +9,8 @@ This is a simple language written in a sort of norwegian bokmål although it is 
 
 The plan is that all numbers have to be spelled out in norwegian, so for 0 you write null and for 3 you write tre, but im not quite sure yet.
 
-Im currently working on s2c.cpp, it translates språk into c(cpp).
+Im currently working on s2c.cpp, it translates språk into c(pp).
+To run it you can issue the following commands ``g++ s2c.cpp -o s2c.o -O2 && ./s2c.o > code.cpp && g++ code.cpp -o compiled.o && ./compiled.o``.
 
 # questions
 - use . or \n?
