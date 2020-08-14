@@ -1,11 +1,11 @@
 # Språk
 This is a simple language written in a sort of norwegian bokmål although it is also backwards compatible with norwegian nynorsk. Each line contains a 'single' instruction. The possible instructions are as follows: \*subject to change and may include plannned feature
-| COMMAND | EXPLANATION |
-| - | - |
-|VAR er NUMBER | sets VAR equal to NUMBER |
-|VAR er VAR2 | sets VAR equal to VAR2 |
-|VAR pluss VAR2 | increments VAR by VAR2 // will probably be renamed in the future |
-|skriv ut VAR | outputs variable in format [VAR: VALUE] INCLUDING THE BRACKETS, may be subject to change. |
+| COMMAND | EXPLANATION | CPP EQUIVALENT |
+| - | - | - |
+|VAR er NUMBER | sets VAR equal to NUMBER | VAR = NUMBER |
+|VAX er VAY | sets VAX equal to VAY | VAX = VAY |
+|VAX pluss VAY | increments VAX by VAY | VAX += VAY |
+|skriv ut VAR | outputs an integer to the standard ouput | cout << VAR / printf("%d", VAR) |
 
 The plan is that all numbers have to be spelled out in norwegian, so for 0 you write null and for 3 you write tre, but im not quite sure yet.
 
